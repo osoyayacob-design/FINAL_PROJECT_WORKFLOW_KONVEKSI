@@ -1,0 +1,893 @@
+{
+  "name": "Otomatisasi sistem stok update PO",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "Background Masalah : \nManajemen stock tidak tercatat rapi, tidak terupdate dengan baik, tidak bisa menyesuaikan secara keseluruhan secara update dengan baik dan kebersamaan\n\n\n\nAlasan Layak Automatisasi : \n- pencatatan akan terintegrasi ke dalam spreadsheet dan terupdate  \n- membantu mengatasi kendala produksi dari segi flow perose penjahitan saat berlanjsung\n",
+        "height": 224,
+        "width": 592,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -656,
+        -272
+      ],
+      "id": "d8bdaee7-0282-492b-b8b9-84d04e42a5c2",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {}
+          ]
+        },
+        "simple": false,
+        "filters": {},
+        "options": {
+          "downloadAttachments": true
+        }
+      },
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -640,
+        64
+      ],
+      "id": "4a163981-cffb-466d-b7b1-e78535c239a7",
+      "name": "Gmail Trigger",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "hc5vgxOhCxcrJaxe",
+          "name": "Gmail account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "432da6fc-60fa-4a2b-9522-6d57a0cfc336",
+              "leftValue": "={{ $binary.attachment_0.mimeType }}",
+              "rightValue": "application/pdf",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -416,
+        64
+      ],
+      "id": "433302be-859d-4de1-917d-748b7d6fa039",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "resource": "document",
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-3-flash-preview",
+          "mode": "list",
+          "cachedResultName": "models/gemini-3-flash-preview"
+        },
+        "text": "Kamu adalah asisten gudang di sebuah konveksi yang berfokus pada produksi seragam. Tugasmu mengelola stok bahan untuk kelengkapan proses produksi menjahit.\n\nKamu akan menerima Purchase Order (PO) dari Gmail dalam bentuk PDF. Dari PDF tersebut, ambil hanya tiga informasi berikut dan abaikan informasi lainnya:\n\nNo PO: berupa kode string.\nModel: hanya ada dua pilihan, yaitu \"Model 1\" dan \"Model 2\".\nJumlah: berupa angka.\n\nATURAN WAJIB:\n\nKembalikan HANYA objek JSON yang valid, TANPA teks pembuka, TANPA penjelasan tambahan, dan TANPA markdown code block (jangan pakai backtick).\nJawaban harus dimulai langsung dengan tanda { dan diakhiri dengan tanda }.\nAmbil hanya no_po, model, dan jumlah. Abaikan informasi lain di dokumen (harga, alamat, tanggal, nama pelanggan, dan sebagainya).\nField \"model\" HANYA boleh bernilai \"Model 1\" atau \"Model 2\" (pakai spasi, huruf M kapital). Jika di dokumen tertulis dengan variasi lain (misalnya \"Model1\", \"model 1\", atau \"M1\"), samakan ke format baku tersebut.\nField \"jumlah\" harus berupa angka murni (number), TANPA titik, koma, atau satuan (pcs, set, dan sebagainya).\nJika no_po, model, atau jumlah tidak terbaca jelas atau tidak ada, isi dengan null (nilai kosong asli, BUKAN string \"null\"). Jangan menebak.\nJika dokumen BUKAN Purchase Order, semua field bernilai null kecuali \"keterangan\" yang diisi \"bukan purchase order\".\nJika satu PO memuat lebih dari satu model, ambil model dengan jumlah terbesar dan jelaskan hal tersebut di field \"keterangan\".\nField \"keterangan\" diisi null jika dokumen valid dan semua data terbaca.\n\nSTRUKTUR/SKEMA yang WAJIB diikuti (nama field dan tipe data HARUS persis seperti ini):\n{\n\"no_po\": \"<string>\",\n\"model\": \"<string, HANYA 'Model 1' atau 'Model 2'>\",\n\"jumlah\": <number>,\n\"keterangan\": \"<string, HANYA diisi jika dokumen bukan Purchase Order atau memuat lebih dari satu model>\"\n}\n\nCONTOH HASIL (hanya ilustrasi, JANGAN dijadikan jawaban):\n{\n\"no_po\": \"PO-2026-099\",\n\"model\": \"Model 2\",\n\"jumlah\": 25,\n\"keterangan\": null\n}",
+        "inputType": "binary",
+        "binaryPropertyName": "attachment_0 ",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        -144,
+        48
+      ],
+      "id": "1de47e0a-b6ec-4c81-a164-876c25996e29",
+      "name": "Analyze document",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "b1peCz6NNXyGbCed",
+          "name": "Google Gemini(PaLM) Api account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1I2bNMEXXvS7bHgWCqoSekDhF-D9a_sxrvaA-3jzEsp4",
+          "mode": "list",
+          "cachedResultName": "Management_Bahan_Jahit",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1I2bNMEXXvS7bHgWCqoSekDhF-D9a_sxrvaA-3jzEsp4/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1I2bNMEXXvS7bHgWCqoSekDhF-D9a_sxrvaA-3jzEsp4/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "No_PO": "={{ $json.No_PO }}",
+            "Model": "={{ $json.Model }}",
+            "Jumlah": "={{ $json.Jumlah }}",
+            "Status": "MASUK"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "No_PO",
+              "displayName": "No_PO",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Model",
+              "displayName": "Model",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Jumlah",
+              "displayName": "Jumlah",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        304,
+        48
+      ],
+      "id": "2f2060ce-f71f-445f-91f0-27d440d8b1df",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "jTAyrqWuuk41Ea8e",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "cfa81bfc-6c0a-47e9-ae54-6646c8683e10",
+              "name": "=No_PO",
+              "value": "={{JSON.parse($json.content.parts[0].text).no_po}}",
+              "type": "string"
+            },
+            {
+              "id": "8cfe8b6d-1f02-4df4-829a-b23f2555c5d7",
+              "name": "Model",
+              "value": "={{JSON.parse($json.content.parts[0].text).model}}",
+              "type": "string"
+            },
+            {
+              "id": "c9134adb-087f-4d57-806f-db5e162556db",
+              "name": "Jumlah",
+              "value": "={{JSON.parse($json.content.parts[0].text).jumlah}}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        80,
+        48
+      ],
+      "id": "2e7860a8-2f18-413d-898c-02f70d6784b7",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.Model }}",
+                    "rightValue": "Model 1",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "c52518c0-afe1-40f4-af0f-251c1890d896"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "b4e36b2e-c221-458a-a8ad-9102ab55ca18",
+                    "leftValue": "={{ $json.Model }}",
+                    "rightValue": "Model 2",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        528,
+        48
+      ],
+      "id": "d52cde26-8799-438e-b452-ed521c72a38b",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "946f0dc9-ae73-42b4-9846-0dbcc3795909",
+              "leftValue": "={{ $json.bahan }}",
+              "rightValue": "={{ $('Edit Fields').first().json.Jumlah * $json.Model1 }}",
+              "operator": {
+                "type": "string",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1216,
+        -80
+      ],
+      "id": "48f0e3f5-4ff4-40ca-ad0c-0086747a5f1c",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "content": "Perushaan memiliki email yg khusus untuk menerima PO, disini adalah emailnya, akan tertrigger jika ada email masuk ke PO\n",
+        "height": 192,
+        "width": 150,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -672,
+        256
+      ],
+      "id": "4b1e6fec-dcce-4e1c-b2ce-a73787a1278f",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "if disini untuk memilah, jadi jika dia email dengan PDF maka akan dilanjutkan ke Analyze document. ",
+        "height": 192,
+        "width": 150,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -448,
+        256
+      ],
+      "id": "2bf32230-a8d4-43cb-8538-e0f808a66b3f",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "Analyze document berfungsi untuk membaca pdf yg masuk \ndan menivertnya ke JSON\n",
+        "height": 144,
+        "width": 150,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -192,
+        240
+      ],
+      "id": "a93f9a76-3cb3-48ab-8308-2e1583c543fb",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "merapikan output Gemini sebelum masuk ke Sheets.\n\nOutput  dari Analyze Document masih berupa JSON. Edit Fields memecahnya jadi field terpisah: no_po, model, jumlah. Dengan begitu tiap field bisa dipetakan ke satu kolom di Google Sheet, dan node setelahnya (Append row, Switch) bisa membaca model dan jumlah langsung.",
+        "height": 272,
+        "width": 230,
+        "color": 2
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        48,
+        240
+      ],
+      "id": "62355b86-74fa-46b1-b2cc-54b206ef5a7b",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "content": "menambahkan keterangan dalam po ke dalam sheet stok \n",
+        "height": 96,
+        "width": 150
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        288,
+        240
+      ],
+      "id": "41017d7b-e3aa-480c-81c1-bee421626025",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {
+        "content": "memisahkan model PO\n",
+        "height": 80,
+        "width": 150,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        512,
+        240
+      ],
+      "id": "4e83710f-1c35-4572-82de-1ad9f850da9e",
+      "name": "Sticky Note6"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1I2bNMEXXvS7bHgWCqoSekDhF-D9a_sxrvaA-3jzEsp4",
+          "mode": "list",
+          "cachedResultName": "Management_Bahan_Jahit",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1I2bNMEXXvS7bHgWCqoSekDhF-D9a_sxrvaA-3jzEsp4/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1712860979,
+          "mode": "list",
+          "cachedResultName": "Stok_Bahan",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1I2bNMEXXvS7bHgWCqoSekDhF-D9a_sxrvaA-3jzEsp4/edit#gid=1712860979"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        768,
+        -80
+      ],
+      "id": "e95b8986-b50a-42f2-b31d-68f5bcc2de17",
+      "name": "Model1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "jTAyrqWuuk41Ea8e",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1I2bNMEXXvS7bHgWCqoSekDhF-D9a_sxrvaA-3jzEsp4",
+          "mode": "list",
+          "cachedResultName": "Management_Bahan_Jahit",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1I2bNMEXXvS7bHgWCqoSekDhF-D9a_sxrvaA-3jzEsp4/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1712860979,
+          "mode": "list",
+          "cachedResultName": "Stok_Bahan",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1I2bNMEXXvS7bHgWCqoSekDhF-D9a_sxrvaA-3jzEsp4/edit#gid=1712860979"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        768,
+        192
+      ],
+      "id": "6b17d3a2-41c5-4530-b057-2ca18bf9c75a",
+      "name": "Model2",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "jTAyrqWuuk41Ea8e",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "db882513-bbbb-43b6-9194-049eaa8f8fc1",
+              "leftValue": "={{ $json.stok }}",
+              "rightValue": "={{ $('Edit Fields').first().json.Jumlah * $json.Model1 }}",
+              "operator": {
+                "type": "number",
+                "operation": "lt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        992,
+        -80
+      ],
+      "id": "f2a86e94-6acf-4a70-b97d-16cfb1297621",
+      "name": "Filter",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "db882513-bbbb-43b6-9194-049eaa8f8fc1",
+              "leftValue": "={{ $json.stok }}",
+              "rightValue": "={{ $('Edit Fields').first().json.Jumlah * $json.Model2 }}",
+              "operator": {
+                "type": "number",
+                "operation": "lt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        992,
+        192
+      ],
+      "id": "f2aeebec-6a40-4138-9b41-8620dccf75b8",
+      "name": "Filter1",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "sendTo": "osoyayacob@gmail.com",
+        "subject": "=Pembelian Bahan Segera - {{ $('Edit Fields').first().json.No_PO }}",
+        "message": "=Bahan berikut kurang untuk PO {{ $('Edit Fields').first().json.No_PO }}: {{ $input.all().map(i => i.json.bahan + ' (kurang ' + ($('Edit Fields').first().json.Jumlah * i.json.Model2 - i.json.stok) + ')').join(', ') }}. Mohon segera dibelanjakan.",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1520,
+        368
+      ],
+      "id": "a3b61fda-4729-47aa-a872-164934768019",
+      "name": "Info ke Pembelian (bahan kurang) Model2",
+      "webhookId": "ab118543-a452-475f-a23c-ef7ce46c90d9",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "hc5vgxOhCxcrJaxe",
+          "name": "Gmail account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "osoyayacob@gmail.com",
+        "subject": "=Pembelian Bahan Segera - {{ $('Edit Fields').first().json.No_PO }}",
+        "message": "=Bahan berikut kurang untuk PO {{ $('Edit Fields').first().json.No_PO }}: {{ $input.all().map(i => i.json.bahan + ' (kurang ' + ($('Edit Fields').first().json.Jumlah * i.json.Model1 - i.json.stok) + ')').join(', ') }}. Mohon segera dibelanjakan.",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1520,
+        -64
+      ],
+      "id": "04d8c814-a0da-46a8-989c-cba647edf01c",
+      "name": "Info ke Pembelian (bahan kurang) Model1",
+      "webhookId": "ab118543-a452-475f-a23c-ef7ce46c90d9",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "hc5vgxOhCxcrJaxe",
+          "name": "Gmail account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "osoyayacob@gmail.com",
+        "subject": "=Bahan Lengkap - {{ $('Edit Fields').first().json.No_PO }}",
+        "message": "=Bahan untuk PO {{ $('Edit Fields').first().json.No_PO }} ({{ $('Edit Fields').first().json.Model }}, {{ $('Edit Fields').first().json.Jumlah }} pcs) sudah lengkap. Produksi dapat dimulai.",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1520,
+        -272
+      ],
+      "id": "bf042b9b-4f98-45da-b2b5-bfb278c6015c",
+      "name": "Info ke Produksi (bahan lengkap) Model1",
+      "webhookId": "ab118543-a452-475f-a23c-ef7ce46c90d9",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "hc5vgxOhCxcrJaxe",
+          "name": "Gmail account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "osoyayacob@gmail.com",
+        "subject": "=Bahan Lengkap - {{ $('Edit Fields').first().json.No_PO }}",
+        "message": "=Bahan untuk PO {{ $('Edit Fields').first().json.No_PO }} ({{ $('Edit Fields').first().json.Model }}, {{ $('Edit Fields').first().json.Jumlah }} pcs) sudah lengkap. Produksi dapat dimulai.",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1520,
+        176
+      ],
+      "id": "af7d0e01-0822-4011-958a-8f3f392f232d",
+      "name": "Info ke Produksi (bahan lengkap) Model2",
+      "webhookId": "ab118543-a452-475f-a23c-ef7ce46c90d9",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "hc5vgxOhCxcrJaxe",
+          "name": "Gmail account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "Get rows dan filter keduanya berdiri untuk masing-masing  model. \n\nFungsinya adalah membaca stok bahan dan meloloskan hanya bahan yang kurang (stok < jumlah PO × kebutuhan per pcs).\n",
+        "height": 112,
+        "width": 320,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        768,
+        352
+      ],
+      "id": "9babe3f0-c17d-4936-a5d3-6a596a1f2f90",
+      "name": "Sticky Note7"
+    },
+    {
+      "parameters": {
+        "content": "Pada node If ini, terjadi 2 percabangan, dimana jika stok cukup, maka akan ada notifikasi yg ditujukan ke produksi . Sebaliknya jika ada stok yang tidak cukup untuk po tersebut, maka akan ada notifikasi ke tim pembelian yg bertugas membeli untuk memenuhi stok yang kurang",
+        "height": 288,
+        "width": 182,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1200,
+        368
+      ],
+      "id": "43af485e-aa7a-43a5-96ef-3cde80d8e1f3",
+      "name": "Sticky Note8"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "946f0dc9-ae73-42b4-9846-0dbcc3795909",
+              "leftValue": "={{ $json.bahan }}",
+              "rightValue": "={{ $('Edit Fields').first().json.Jumlah * $json.Model1 }}",
+              "operator": {
+                "type": "string",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1216,
+        192
+      ],
+      "id": "27ffa2e1-cebb-4682-8af4-57608dcbff9f",
+      "name": "If2"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Analyze document",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail Trigger": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze document": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Model1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Model2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Info ke Produksi (bahan lengkap) Model1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Info ke Pembelian (bahan kurang) Model1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Model1": {
+      "main": [
+        [
+          {
+            "node": "Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Model2": {
+      "main": [
+        [
+          {
+            "node": "Filter1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter1": {
+      "main": [
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "Info ke Produksi (bahan lengkap) Model2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Info ke Pembelian (bahan kurang) Model2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "15fa22c3-7b52-4c09-a3ed-e5a42059d239",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "036645b69f7de0dfe9fb4cf75460d9b2d5e34f47eedf74b14dee66ae1a5ad0e2"
+  },
+  "nodeGroups": [],
+  "id": "30PBTx0unTMpa7X4",
+  "tags": []
+}
