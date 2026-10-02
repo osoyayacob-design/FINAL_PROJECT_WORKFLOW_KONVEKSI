@@ -6,7 +6,7 @@ https://yacob050.app.n8n.cloud/workflow/30PBTx0unTMpa7X4
 
 Workflow n8n yang membaca Purchase Order (PDF) dari Gmail, mencatatnya ke Google Sheets, menghitung kebutuhan bahan, lalu mengirim notifikasi ke tim produksi atau tim pembelian sesuai kecukupan stok.
 
-**Dibuat oleh:** [Nama Kamu] | **Bootcamp:** [Nama Bootcamp]
+**Dibuat oleh:** Yacob Osoya K. | **Bootcamp:** AI Automation Engineer (PPKD X Hacktive8)
 
 ---
 
