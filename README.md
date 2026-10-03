@@ -3,6 +3,7 @@
 # Otomasi Pengecekan Stok Bahan Konveksi dari Purchase Order
 
 https://yacob050.app.n8n.cloud/workflow/30PBTx0unTMpa7X4
+https://youtu.be/On49j0R2E3A
 
 Workflow n8n yang membaca Purchase Order (PDF) dari Gmail, mencatatnya ke Google Sheets, menghitung kebutuhan bahan, lalu mengirim notifikasi ke tim produksi atau tim pembelian sesuai kecukupan stok.
 
